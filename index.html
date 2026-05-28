@@ -1,0 +1,2322 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPT · Etiquetas & Estoque</title>
+    <style>
+/* =====================================================
+   RESET & VARIÁVEIS
+===================================================== */
+:root {
+    --primary:  #1a1a2e;
+    --accent:   #0f3460;
+    --red:      #e94560;
+    --green:    #2e7d32;
+    --greenlt:  #43a047;
+    --orange:   #e65100;
+    --orangelt: #fb8c00;
+    --bg:       #f0f2f5;
+    --card:     #ffffff;
+    --border:   #e2e8f0;
+    --dim:      #94a3b8;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: #222; min-height: 100vh; }
+
+/* =====================================================
+   HEADER
+===================================================== */
+.header {
+    background: var(--primary);
+    color: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 300;
+    box-shadow: 0 2px 16px rgba(0,0,0,.4);
+}
+.header-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    flex-wrap: wrap;
+}
+.logo { font-size: 20px; font-weight: 900; letter-spacing: 3px; white-space: nowrap; }
+.logo em { color: var(--red); font-style: normal; }
+.hdr-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+.nav-tabs { display: flex; padding: 0 20px; border-top: 1px solid rgba(255,255,255,.1); overflow-x: auto; }
+.nav-tab {
+    padding: 9px 18px;
+    color: #8899aa;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    border-bottom: 3px solid transparent;
+    transition: color .2s, border-color .2s;
+    user-select: none;
+    white-space: nowrap;
+}
+.nav-tab:hover { color: #fff; }
+.nav-tab.active { color: #fff; border-bottom-color: var(--red); }
+
+/* =====================================================
+   BOTÕES
+===================================================== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter .15s, transform .1s, box-shadow .15s;
+    white-space: nowrap;
+}
+.btn:hover  { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.2); }
+.btn:active { transform: translateY(0); box-shadow: none; }
+.btn:disabled { opacity: .4; cursor: default; transform: none !important; box-shadow: none !important; filter: none !important; }
+.btn-primary { background: var(--red);      color: #fff; }
+.btn-success { background: var(--greenlt);  color: #fff; }
+.btn-warning { background: var(--orangelt); color: #fff; }
+.btn-danger  { background: #d32f2f;         color: #fff; }
+.btn-ghost   { background: rgba(255,255,255,.13); color: #fff; border: 1px solid rgba(255,255,255,.2); }
+.btn-outline { background: #fff; color: var(--primary); border: 1px solid #ccc; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+/* =====================================================
+   LAYOUT
+===================================================== */
+.content { max-width: 1440px; margin: 0 auto; padding: 18px 20px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.card {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 16px 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    margin-bottom: 16px;
+}
+.card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--bg);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.card-title .actions { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.info-box {
+    background: #e3f2fd;
+    border-left: 4px solid #1976d2;
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #0d47a1;
+    margin-bottom: 14px;
+    line-height: 1.7;
+}
+.form-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group label { font-size: 12px; font-weight: 600; color: #555; }
+select, input[type=text], input[type=number], input[type=url], input[type=date], input[type=password] {
+    padding: 8px 10px;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    font-size: 13px;
+    background: #fff;
+    color: #222;
+    transition: border-color .15s;
+}
+select:focus, input:focus { outline: none; border-color: var(--red); }
+
+/* =====================================================
+   GRADE DE SKUs
+===================================================== */
+.sku-grid-wrap { overflow-x: auto; }
+table.sku-grid { border-collapse: collapse; white-space: nowrap; }
+table.sku-grid th {
+    background: var(--primary);
+    color: #fff;
+    padding: 7px 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    min-width: 60px;
+}
+table.sku-grid th.col-color {
+    background: var(--accent);
+    text-align: left;
+    padding-left: 10px;
+    min-width: 110px;
+    position: sticky;
+    left: 0;
+    z-index: 2;
+}
+table.sku-grid td { padding: 2px; text-align: center; border: 1px solid #f0f0f0; }
+table.sku-grid td.col-color {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 6px 10px;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    border: none;
+    text-align: left;
+}
+table.sku-grid tr:nth-child(odd) td.col-color { background: var(--primary); }
+
+/* FIX #1: campo de quantidade com largura suficiente para 3 dígitos */
+.qty-input {
+    width: 56px;
+    height: 30px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #333;
+    padding: 0 2px;
+}
+.qty-input:focus { outline: none; border-color: var(--red); background: #fff5f6; }
+.qty-input.filled { background: #e8f5e9; border-color: #4caf50; color: #1b5e20; }
+
+/* =====================================================
+   STATS
+===================================================== */
+.stats-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.stat-card {
+    background: var(--card);
+    border-radius: 8px;
+    padding: 14px 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    flex: 1;
+    min-width: 110px;
+}
+.stat-label { font-size: 10px; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.stat-value { font-size: 26px; font-weight: 900; color: var(--primary); margin-top: 4px; }
+
+/* =====================================================
+   TABELAS
+===================================================== */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+    background: var(--primary);
+    color: #fff;
+    padding: 9px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+}
+.data-table td { padding: 7px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: #fafafa; }
+.badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 800;
+}
+.badge-ok   { background: #e8f5e9; color: #2e7d32; }
+.badge-low  { background: #fff3e0; color: #e65100; }
+.badge-zero { background: #ffebee; color: #c62828; }
+.dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    border: 1px solid rgba(0,0,0,.15);
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+.type-in  { color: #2e7d32; font-weight: 800; }
+.type-out { color: var(--red); font-weight: 800; }
+.filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.empty-state { text-align: center; padding: 36px 20px; color: #aaa; font-size: 14px; }
+.empty-state .ico { font-size: 36px; display: block; margin-bottom: 8px; }
+
+/* =====================================================
+   PREVIEW DE ETIQUETAS
+===================================================== */
+.labels-preview-wrap {
+    max-height: 440px;
+    overflow-y: auto;
+    background: #ddd;
+    border-radius: 8px;
+    padding: 10px;
+}
+.labels-preview { display: flex; flex-wrap: wrap; gap: 6px; }
+.preview-label {
+    width: 189px;
+    height: 113px;
+    border: 1px solid #bbb;
+    border-radius: 3px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 5px;
+    box-shadow: 1px 1px 4px rgba(0,0,0,.15);
+    overflow: hidden;
+    gap: 1px;
+}
+.preview-label .lbl-text {
+    font-weight: 900;
+    text-align: center;
+    line-height: 1;
+    white-space: nowrap;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.preview-label .lbl-bc-img { max-width: 182px; height: 52px; object-fit: contain; display: block; }
+.preview-label .lbl-sku { font-size: 8px; color: #555; letter-spacing: .5px; font-family: Arial, sans-serif; }
+
+/* =====================================================
+   SCANNER
+===================================================== */
+.scanner-mode-toggle { display: flex; gap: 0; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; width: fit-content; }
+.mode-btn {
+    padding: 10px 28px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    background: #f5f5f5;
+    color: #666;
+    transition: all .2s;
+}
+.mode-btn.active-in  { background: var(--greenlt); color: #fff; }
+.mode-btn.active-out { background: var(--red);     color: #fff; }
+.scan-input-wrap { position: relative; margin: 16px 0; }
+.scan-input-wrap input {
+    width: 100%;
+    padding: 14px 16px 14px 50px;
+    font-size: 18px;
+    font-weight: 600;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    transition: border-color .2s;
+}
+.scan-input-wrap input:focus { border-color: var(--red); }
+.scan-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 24px; pointer-events: none; }
+.scan-result {
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    display: none;
+    align-items: center;
+    gap: 16px;
+    animation: fadeIn .2s;
+}
+.scan-result.ok  { background: #e8f5e9; border: 2px solid #4caf50; }
+.scan-result.err { background: #ffebee; border: 2px solid #e53935; }
+.scan-result-icon { font-size: 36px; }
+.scan-result-info { flex: 1; }
+.scan-result-title { font-size: 20px; font-weight: 900; }
+.scan-result-detail { font-size: 13px; color: #555; margin-top: 4px; }
+.scan-result-stock { font-size: 15px; font-weight: 700; margin-top: 6px; }
+@keyframes fadeIn { from { opacity:0; transform: scale(.97); } to { opacity:1; transform: scale(1); } }
+.scan-log { max-height: 320px; overflow-y: auto; }
+.scan-log-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+.scan-log-item:last-child { border-bottom: none; }
+.scan-log-badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+.sl-in  { background: #e8f5e9; color: #2e7d32; }
+.sl-out { background: #ffebee; color: #c62828; }
+.sl-err { background: #fff3e0; color: #e65100; }
+.scan-log-time { color: #aaa; font-size: 11px; margin-left: auto; }
+
+/* =====================================================
+   SHEETS CONFIG
+===================================================== */
+.sheets-status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+.sheets-ok  { background: #e8f5e9; color: #2e7d32; }
+.sheets-off { background: #f5f5f5; color: #888; }
+.sheets-err { background: #ffebee; color: #c62828; }
+.code-block {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre;
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 10px 0;
+}
+
+/* =====================================================
+   MODAL
+===================================================== */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 500; align-items: center; justify-content: center; }
+.overlay.open { display: flex; }
+.modal { background: #fff; border-radius: 12px; padding: 24px; width: 380px; max-width: 92vw; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+.modal-title { font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 16px; }
+.modal-body { display: flex; flex-direction: column; gap: 12px; }
+.modal-body select, .modal-body input { width: 100%; }
+.modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+
+/* =====================================================
+   TOAST
+===================================================== */
+#toast {
+    position: fixed;
+    bottom: 22px;
+    right: 22px;
+    background: var(--primary);
+    color: #fff;
+    padding: 11px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 9999;
+    box-shadow: 0 4px 20px rgba(0,0,0,.3);
+    transform: translateY(80px);
+    opacity: 0;
+    transition: transform .3s, opacity .3s;
+    pointer-events: none;
+}
+#toast.show  { transform: translateY(0); opacity: 1; }
+#toast.tok   { border-left: 4px solid #4caf50; }
+#toast.terr  { border-left: 4px solid var(--red); }
+#toast.twarn { border-left: 4px solid var(--orangelt); }
+
+/* =====================================================
+   SYNC INDICATOR
+===================================================== */
+.sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #888; display: inline-block; margin-right: 5px; }
+.sync-dot.on  { background: #4caf50; box-shadow: 0 0 0 2px rgba(76,175,80,.3); }
+.sync-dot.off { background: #aaa; }
+.sync-dot.err { background: var(--red); }
+
+/* =====================================================
+   PRINT AREA
+===================================================== */
+#print-area { display: none; }
+@media print {
+    @page { size: 100mm auto; margin: 0; }
+    body > *:not(#print-area) { display: none !important; }
+    body, #print-area { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+    #print-area { display: block !important; width: 100mm !important; }
+    .print-grid { display: flex !important; flex-wrap: wrap !important; width: 100mm !important; margin: 0 !important; padding: 0 !important; }
+    .print-label {
+        width: 50mm !important; height: 30mm !important; box-sizing: border-box !important;
+        display: flex !important; flex-direction: column !important;
+        align-items: center !important; justify-content: center !important;
+        padding: 0.5mm 1mm !important; break-inside: avoid !important;
+        page-break-inside: avoid !important; overflow: hidden !important; gap: 0 !important;
+    }
+    .print-label .lbl-text { font-weight: 900 !important; text-align: center !important; line-height: 1 !important; white-space: nowrap !important; font-family: Arial, Helvetica, sans-serif !important; margin-bottom: 0.5mm !important; }
+    .print-label .lbl-bc-img { width: 47mm !important; height: 12mm !important; display: block !important; object-fit: contain !important; }
+    .print-label .lbl-sku { font-size: 2.8mm !important; font-family: Arial, sans-serif !important; text-align: center !important; margin-top: 0.3mm !important; color: #000 !important; letter-spacing: .3px !important; }
+}
+
+/* =====================================================
+   LOGIN OVERLAY
+===================================================== */
+.login-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--primary);
+    z-index: 9000;
+    align-items: center;
+    justify-content: center;
+}
+.login-overlay.open { display: flex; }
+.login-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 40px 36px;
+    width: 360px;
+    max-width: 92vw;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    text-align: center;
+}
+.login-logo { font-size: 32px; font-weight: 900; letter-spacing: 4px; color: var(--primary); margin-bottom: 6px; }
+.login-logo em { color: var(--red); font-style: normal; }
+.login-subtitle { color: #888; font-size: 13px; margin-bottom: 28px; }
+.login-form { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+.login-form .form-group label { font-size: 12px; font-weight: 700; color: #555; margin-bottom: 2px; }
+.login-form input { width: 100%; padding: 11px 13px; font-size: 15px; }
+.login-err { color: var(--red); font-size: 13px; text-align: center; min-height: 20px; margin-top: 4px; }
+.btn-login { width: 100%; padding: 12px; font-size: 16px; margin-top: 6px; justify-content: center; }
+
+/* =====================================================
+   USER INFO NO HEADER
+===================================================== */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    background: rgba(255,255,255,.1);
+    border-radius: 20px;
+    font-size: 12px;
+    color: #ccc;
+}
+.user-info strong { color: #fff; }
+
+/* =====================================================
+   MOBILE SCANNER TAB
+===================================================== */
+.mobile-mode-toggle {
+    display: flex;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #ddd;
+    margin-bottom: 16px;
+}
+.mobile-mode-btn {
+    flex: 1;
+    padding: 20px 10px;
+    font-size: 20px;
+    font-weight: 900;
+    cursor: pointer;
+    border: none;
+    background: #f5f5f5;
+    color: #666;
+    transition: all .2s;
+    line-height: 1.3;
+    text-align: center;
+}
+.mobile-mode-btn span { display: block; font-size: 13px; font-weight: 600; margin-top: 4px; opacity: .7; }
+.mobile-mode-btn.active-in  { background: var(--greenlt); color: #fff; }
+.mobile-mode-btn.active-out { background: var(--red);     color: #fff; }
+.mobile-mode-btn.active-in span, .mobile-mode-btn.active-out span { opacity: .9; }
+
+.mobile-qty-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    background: #f8f8f8;
+    padding: 12px 16px;
+    border-radius: 10px;
+}
+.mobile-qty-label { font-size: 13px; font-weight: 700; color: #555; }
+.mobile-qty-ctrl { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.mobile-qty-btn {
+    width: 40px; height: 40px;
+    border: none; border-radius: 8px;
+    font-size: 22px; font-weight: 900;
+    cursor: pointer; background: #e0e0e0; color: #333;
+    transition: background .15s;
+}
+.mobile-qty-btn:hover { background: #ccc; }
+.mobile-qty-val { font-size: 26px; font-weight: 900; color: var(--primary); min-width: 44px; text-align: center; }
+
+.mobile-camera-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto 16px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #111;
+    aspect-ratio: 4/3;
+}
+#mobile-video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.camera-crosshair {
+    position: absolute;
+    inset: 22%;
+    border: 2px solid rgba(255,255,255,.8);
+    border-radius: 8px;
+    pointer-events: none;
+}
+.camera-scan-line {
+    position: absolute;
+    left: 22%; right: 22%;
+    height: 2px;
+    background: var(--red);
+    opacity: 0.8;
+    animation: scanLine 2s linear infinite;
+    pointer-events: none;
+}
+@keyframes scanLine {
+    0%   { top: 22%; }
+    50%  { top: 78%; }
+    100% { top: 22%; }
+}
+.camera-no-support {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+    color: #aaa;
+    font-size: 14px;
+    text-align: center;
+    padding: 20px;
+}
+
+.mobile-camera-btns { display: flex; gap: 10px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+
+.mobile-feedback {
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    display: none;
+    text-align: center;
+    animation: fadeIn .2s;
+}
+.mobile-feedback.ok  { background: #e8f5e9; border: 2px solid #4caf50; display: block; }
+.mobile-feedback.err { background: #ffebee; border: 2px solid #e53935; display: block; }
+.mobile-feedback-title  { font-size: 18px; font-weight: 900; }
+.mobile-feedback-detail { font-size: 13px; color: #555; margin-top: 4px; }
+
+.mobile-manual-wrap { display: flex; gap: 8px; margin-bottom: 16px; }
+.mobile-manual-wrap input { flex: 1; font-size: 15px; }
+
+.mobile-log-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; border-bottom: 1px solid #f0f0f0; font-size: 13px;
+}
+.mobile-log-item:last-child { border-bottom: none; }
+
+/* =====================================================
+   STOCK MATRIX — DESKTOP
+===================================================== */
+.stock-matrix-wrap { overflow-x: auto; margin-bottom: 20px; }
+table.stock-matrix { border-collapse: collapse; white-space: nowrap; width: 100%; }
+table.stock-matrix th {
+    background: var(--primary);
+    color: #fff;
+    padding: 7px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    min-width: 44px;
+}
+table.stock-matrix th.col-color {
+    background: var(--accent);
+    text-align: left;
+    padding-left: 10px;
+    min-width: 110px;
+    position: sticky;
+    left: 0;
+    z-index: 2;
+}
+table.stock-matrix td { padding: 3px; text-align: center; border: 1px solid #f0f0f0; }
+table.stock-matrix td.col-color {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 6px 10px;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    border: none;
+    text-align: left;
+}
+table.stock-matrix tr:nth-child(odd) td.col-color { background: var(--primary); }
+.matrix-cell {
+    display: inline-block;
+    min-width: 36px;
+    padding: 5px 4px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: filter .15s;
+}
+.matrix-cell:hover { filter: brightness(.9); }
+.matrix-cell.pos  { background: #e8f5e9; color: #2e7d32; }
+.matrix-cell.low  { background: #fff3e0; color: #e65100; }
+.matrix-cell.zero { background: #ffebee; color: #c62828; }
+
+/* =====================================================
+   STOCK CARDS — MOBILE
+===================================================== */
+.stock-cards { display: flex; flex-direction: column; gap: 12px; }
+.stock-card { background: var(--card); border-radius: 10px; padding: 12px 14px; box-shadow: 0 2px 8px rgba(0,0,0,.07); }
+.stock-card-title { font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.stock-card-items { display: flex; flex-wrap: wrap; gap: 6px; }
+.stock-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 16px; font-size: 12px; font-weight: 700;
+}
+.stock-chip.pos  { background: #e8f5e9; color: #2e7d32; }
+.stock-chip.low  { background: #fff3e0; color: #e65100; }
+.stock-chip.zero { background: #ffebee; color: #c62828; }
+
+/* Visibilidade responsiva */
+@media (max-width: 768px) {
+    .desktop-only { display: none !important; }
+    .mobile-only  { display: block !important; }
+    .hdr-btns .btn { display: none; }
+    .hdr-btns .btn-mobile-show { display: inline-flex !important; }
+}
+@media (min-width: 769px) {
+    .desktop-only { display: block; }
+    .mobile-only  { display: none !important; }
+}
+
+/* =====================================================
+   RESPONSIVO GERAL
+===================================================== */
+@media (max-width: 640px) {
+    .content { padding: 10px 12px; }
+    .header-top { padding: 8px 12px; }
+    .nav-tab { padding: 8px 12px; font-size: 12px; }
+}
+
+/* Legenda da matriz */
+.matrix-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; font-size: 12px; align-items: center; }
+.matrix-legend-item { display: flex; align-items: center; gap: 5px; }
+.matrix-legend-dot { width: 14px; height: 14px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════ LOGIN OVERLAY ═══════════════ -->
+<!-- Configuração Supabase: tabela public.usuarios_spt com campos id, usuario, senha, nome, perfil, ativo -->
+<!-- NOTA DE SEGURANÇA: RLS está desativado neste momento para facilitar testes iniciais.           -->
+<!-- Futuramente: ativar RLS, usar Supabase Auth, senhas criptografadas (bcrypt) e perfis robustos. -->
+<div class="login-overlay open" id="login-overlay">
+    <div class="login-box">
+        <div class="login-logo">SPT<em>.</em>STOCK</div>
+        <div class="login-subtitle">Sistema de Etiquetas &amp; Estoque</div>
+        <div class="login-form">
+            <div class="form-group">
+                <label>Usuário</label>
+                <input type="text" id="login-user" placeholder="Digite seu usuário"
+                       autocomplete="username" autocapitalize="none" spellcheck="false"
+                       onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+            </div>
+            <div class="form-group">
+                <label>Senha</label>
+                <input type="password" id="login-pass" placeholder="Digite sua senha"
+                       autocomplete="current-password"
+                       onkeydown="if(event.key==='Enter')doLogin()">
+            </div>
+            <div class="login-err" id="login-err"></div>
+            <button class="btn btn-primary btn-login" onclick="doLogin()" id="login-btn">
+                🔐 Entrar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<header class="header" id="main-header" style="display:none">
+    <div class="header-top">
+        <div class="logo">SPT<em>.</em>STOCK</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-left:12px">
+            <span class="sync-dot" id="sync-dot"></span>
+            <span id="sync-label" style="font-size:12px;color:#94a3b8">Sheets desconectado</span>
+        </div>
+        <!-- Info do usuário logado -->
+        <div class="user-info" id="user-info-hdr" style="margin-left:8px">
+            <span>👤</span>
+            <strong id="user-nome-hdr">—</strong>
+            <span id="user-perfil-hdr" style="opacity:.7"></span>
+        </div>
+        <div class="hdr-btns">
+            <button class="btn btn-ghost btn-sm" onclick="openMov('entrada')">📥 Entrada Manual</button>
+            <button class="btn btn-ghost btn-sm" onclick="openMov('saida')">📤 Saída Manual</button>
+            <button class="btn btn-primary btn-sm" onclick="gerarEtiquetas()">🏷️ Gerar Etiquetas</button>
+            <button class="btn btn-outline btn-sm" onclick="imprimir()">🖨️ Imprimir</button>
+            <button class="btn btn-ghost btn-sm" onclick="limparGrade()">🗑️ Limpar Grade</button>
+            <button class="btn btn-danger btn-sm" onclick="doLogout()" title="Sair do sistema">🚪 Sair</button>
+        </div>
+    </div>
+    <nav class="nav-tabs">
+        <div class="nav-tab active" data-tab="etiquetas" onclick="showTab('etiquetas')">🏷️ Etiquetas</div>
+        <div class="nav-tab"        data-tab="scanner"   onclick="showTab('scanner')">📡 Scanner</div>
+        <div class="nav-tab"        data-tab="mobile"    onclick="showTab('mobile')">📱 Mobile</div>
+        <div class="nav-tab"        data-tab="estoque"   onclick="showTab('estoque')">📦 Estoque</div>
+        <div class="nav-tab"        data-tab="historico" onclick="showTab('historico')">📋 Histórico</div>
+    </nav>
+</header>
+
+<!-- ═══════════════ CONTEÚDO ═══════════════ -->
+<main class="content" id="main-content" style="display:none">
+
+<!-- ─────────── TAB: ETIQUETAS ─────────── -->
+<div class="tab-panel active" id="panel-etiquetas">
+    <div class="info-box">
+        💡 Preencha as quantidades na grade (Tab / Enter avança célula) e clique em <strong>Gerar Etiquetas</strong>.
+        O código de barras Code 128 é gerado automaticamente. Impressão em 2 colunas de 50×30 mm.
+    </div>
+    <!-- Lançamento rápido -->
+    <div class="card">
+        <div class="card-title">⚡ Lançamento Rápido</div>
+        <div class="form-row">
+            <select id="q-color" style="min-width:130px"><option value="">Cor</option></select>
+            <input type="number" id="q-num" placeholder="Nº" min="16" max="36" style="width:64px">
+            <input type="number" id="q-qty" placeholder="Qtd" min="1" value="1" style="width:64px">
+            <button class="btn btn-primary btn-sm" onclick="quickAdd()">➕ Adicionar</button>
+            <button class="btn btn-outline btn-sm" onclick="preencherTudo()">📋 Preencher tudo…</button>
+            <span id="contador" style="margin-left:auto;font-size:13px;color:#666;font-weight:600"></span>
+        </div>
+    </div>
+    <!-- Grade de SKUs -->
+    <div class="card">
+        <div class="card-title">📊 Grade de SKUs — Quantidades para Impressão</div>
+        <div class="sku-grid-wrap">
+            <table class="sku-grid" id="sku-grid">
+                <thead><tr><th class="col-color">Cor \ Nº</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+    <!-- Preview -->
+    <div class="card" id="preview-card" style="display:none">
+        <div class="card-title">
+            👁️ Preview — <span id="preview-count"></span>
+            <span class="actions">
+                <button class="btn btn-primary btn-sm" onclick="imprimir()">🖨️ Imprimir Agora</button>
+            </span>
+        </div>
+        <div class="labels-preview-wrap">
+            <div class="labels-preview" id="labels-preview"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ─────────── TAB: SCANNER ─────────── -->
+<div class="tab-panel" id="panel-scanner">
+    <div class="card">
+        <div class="card-title">📡 Leitura por Código de Barras (Leitor Físico)</div>
+        <div class="form-row" style="margin-bottom:12px">
+            <div>
+                <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px">Modo de operação</div>
+                <div class="scanner-mode-toggle">
+                    <button class="mode-btn active-in" id="mode-in"  onclick="setScanMode('entrada')">📥 ENTRADA</button>
+                    <button class="mode-btn"            id="mode-out" onclick="setScanMode('saida')">📤 SAÍDA</button>
+                </div>
+            </div>
+            <div style="margin-left:20px">
+                <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px">Quantidade por leitura</div>
+                <input type="number" id="scan-qty" min="1" value="1" style="width:80px;font-size:15px;font-weight:700">
+            </div>
+            <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+                <button class="btn btn-danger btn-sm" onclick="clearScanLog()">🗑️ Limpar Log</button>
+                <span id="scan-session-count" style="font-size:12px;color:#888">0 leituras nesta sessão</span>
+            </div>
+        </div>
+        <div class="scan-input-wrap">
+            <span class="scan-icon">📷</span>
+            <input type="text" id="scan-input"
+                   placeholder="Leia o código de barras aqui (ou digite o SKU e pressione Enter)…"
+                   autocomplete="off" spellcheck="false">
+        </div>
+        <div class="scan-result" id="scan-result">
+            <div class="scan-result-icon" id="scan-result-icon"></div>
+            <div class="scan-result-info">
+                <div class="scan-result-title"  id="scan-result-title"></div>
+                <div class="scan-result-detail" id="scan-result-detail"></div>
+                <div class="scan-result-stock"  id="scan-result-stock"></div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-title">📋 Log da Sessão Atual</div>
+        <div class="scan-log" id="scan-log">
+            <div class="empty-state"><span class="ico">📡</span>Aguardando leitura…</div>
+        </div>
+    </div>
+</div>
+
+<!-- ─────────── TAB: MOBILE ─────────── -->
+<div class="tab-panel" id="panel-mobile">
+    <div class="card">
+        <div class="card-title">📱 Scanner por Câmera — Mobile</div>
+        <!-- Modo -->
+        <div class="mobile-mode-toggle">
+            <button class="mobile-mode-btn active-in" id="mb-mode-in" onclick="setMobileMode('entrada')">
+                📥<span>ENTRADA</span>
+            </button>
+            <button class="mobile-mode-btn" id="mb-mode-out" onclick="setMobileMode('saida')">
+                📤<span>SAÍDA</span>
+            </button>
+        </div>
+        <!-- Quantidade -->
+        <div class="mobile-qty-bar">
+            <span class="mobile-qty-label">Quantidade:</span>
+            <div class="mobile-qty-ctrl">
+                <button class="mobile-qty-btn" onclick="changeMobileQty(-1)">−</button>
+                <span class="mobile-qty-val" id="mb-qty-val">1</span>
+                <button class="mobile-qty-btn" onclick="changeMobileQty(+1)">+</button>
+            </div>
+        </div>
+        <!-- Câmera -->
+        <div class="mobile-camera-wrap" id="mb-camera-wrap">
+            <video id="mobile-video" autoplay playsinline muted></video>
+            <div class="camera-crosshair"></div>
+            <div class="camera-scan-line" id="mb-scan-line" style="display:none"></div>
+            <div class="camera-no-support" id="mb-no-support" style="display:none">
+                <span style="font-size:36px">📷</span>
+                <span>Câmera não disponível</span>
+                <span style="font-size:12px">Use o campo manual abaixo</span>
+            </div>
+        </div>
+        <!-- Botões câmera -->
+        <div class="mobile-camera-btns">
+            <button class="btn btn-success" id="mb-btn-start" onclick="startMobileCamera()">▶️ Iniciar Câmera</button>
+            <button class="btn btn-danger"  id="mb-btn-stop"  onclick="stopMobileCamera()" style="display:none">⏹️ Parar Câmera</button>
+        </div>
+        <!-- Feedback -->
+        <div class="mobile-feedback" id="mb-feedback">
+            <div class="mobile-feedback-title"  id="mb-fb-title"></div>
+            <div class="mobile-feedback-detail" id="mb-fb-detail"></div>
+        </div>
+        <!-- Input manual fallback -->
+        <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px">📝 Lançamento manual (fallback)</div>
+        <div class="mobile-manual-wrap">
+            <input type="text" id="mb-manual-input"
+                   placeholder="Digite o SKU (ex: SPT-PT-32) e pressione Enter"
+                   autocomplete="off" spellcheck="false" autocapitalize="characters"
+                   onkeydown="if(event.key==='Enter'){processMobileScan(this.value.trim());this.value='';}">
+            <button class="btn btn-primary" onclick="processMobileScanFromInput()">↵ Lançar</button>
+        </div>
+    </div>
+    <!-- Log mobile -->
+    <div class="card">
+        <div class="card-title">
+            📋 Última Leitura &amp; Log
+            <span class="actions">
+                <button class="btn btn-danger btn-sm" onclick="clearMobileLog()">🗑️ Limpar</button>
+                <span id="mb-session-count" style="font-size:12px;color:#888">0 leituras</span>
+            </span>
+        </div>
+        <div class="scan-log" id="mb-log">
+            <div class="empty-state"><span class="ico">📱</span>Aguardando leitura…</div>
+        </div>
+    </div>
+</div>
+
+<!-- ─────────── TAB: ESTOQUE ─────────── -->
+<div class="tab-panel" id="panel-estoque">
+    <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Total SKUs</div><div class="stat-value" id="s-skus">0</div></div>
+        <div class="stat-card"><div class="stat-label">Total Pares</div><div class="stat-value" id="s-total">0</div></div>
+        <div class="stat-card"><div class="stat-label">Com Estoque</div><div class="stat-value" id="s-com">0</div></div>
+        <div class="stat-card"><div class="stat-label">Zerados</div><div class="stat-value" id="s-zero">0</div></div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card" style="padding-bottom:10px;margin-bottom:10px">
+        <div class="filter-row">
+            <input type="text" id="sf-search" placeholder="🔍 Buscar SKU ou cor…" oninput="renderStock()" style="min-width:200px">
+            <select id="sf-color" onchange="renderStock()"><option value="">Todas as cores</option></select>
+            <select id="sf-status" onchange="renderStock()">
+                <option value="">Todos</option>
+                <option value="com">Com estoque</option>
+                <option value="zero">Zerado</option>
+            </select>
+            <div style="margin-left:auto;display:flex;gap:6px">
+                <button class="btn btn-success btn-sm" onclick="openMov('entrada')">📥 Entrada</button>
+                <button class="btn btn-warning btn-sm" onclick="openMov('saida')">📤 Saída</button>
+                <button class="btn btn-outline btn-sm" onclick="exportStock()">📊 Exportar CSV</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Matriz (desktop) -->
+    <div class="card desktop-only" id="stock-matrix-card">
+        <div class="card-title">
+            🗂️ Visão Matricial — Saldo por Cor × Número
+        </div>
+        <div class="matrix-legend">
+            <strong style="font-size:12px">Legenda:</strong>
+            <div class="matrix-legend-item"><div class="matrix-legend-dot" style="background:#e8f5e9;border:1px solid #4caf50"></div><span style="color:#2e7d32">Positivo</span></div>
+            <div class="matrix-legend-item"><div class="matrix-legend-dot" style="background:#fff3e0;border:1px solid #fb8c00"></div><span style="color:#e65100">Baixo (1–5)</span></div>
+            <div class="matrix-legend-item"><div class="matrix-legend-dot" style="background:#ffebee;border:1px solid #e53935"></div><span style="color:#c62828">Zerado</span></div>
+        </div>
+        <div class="stock-matrix-wrap">
+            <table class="stock-matrix" id="stock-matrix-table">
+                <thead><tr><th class="col-color">Cor \ Nº</th></tr></thead>
+                <tbody id="stock-matrix-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Cards (mobile) -->
+    <div class="mobile-only" id="stock-cards-wrap" style="display:none">
+        <div class="stock-cards" id="stock-cards"></div>
+    </div>
+
+    <!-- Tabela detalhada (desktop) -->
+    <div class="card desktop-only" id="stock-table-card">
+        <div class="card-title">📋 Tabela Detalhada</div>
+        <div style="overflow-x:auto">
+            <table class="data-table">
+                <thead><tr><th>SKU</th><th>Cor</th><th>Nº</th><th>Saldo</th><th>Ações</th></tr></thead>
+                <tbody id="stock-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ─────────── TAB: HISTÓRICO ─────────── -->
+<div class="tab-panel" id="panel-historico">
+    <div class="card">
+        <div class="card-title">
+            📋 Histórico de Movimentações
+            <span class="actions">
+                <button class="btn btn-outline btn-sm" onclick="exportHistory()">📊 Exportar CSV</button>
+                <button class="btn btn-danger btn-sm" onclick="clearHistory()">🗑️ Limpar</button>
+            </span>
+        </div>
+        <div class="filter-row">
+            <select id="hf-type" onchange="renderHistory()">
+                <option value="">Todos os tipos</option>
+                <option value="entrada">Entrada</option>
+                <option value="saida">Saída</option>
+            </select>
+            <select id="hf-color" onchange="renderHistory()"><option value="">Todas as cores</option></select>
+            <input type="date" id="hf-from" onchange="renderHistory()" title="De">
+            <input type="date" id="hf-to"   onchange="renderHistory()" title="Até">
+        </div>
+        <div style="overflow-x:auto">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Data/Hora</th><th>Tipo</th><th>SKU</th><th>Cor</th>
+                        <th>Nº</th><th>Qtd</th><th>Saldo Após</th><th>Obs.</th><th>Usuário</th>
+                    </tr>
+                </thead>
+                <tbody id="history-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Google Sheets -->
+    <div class="card">
+        <div class="card-title">
+            🔗 Google Sheets — Sincronização
+            <span class="actions" id="sheets-status-badge">
+                <span class="sheets-status sheets-off">⚪ Desconectado</span>
+            </span>
+        </div>
+        <div class="info-box">
+            <strong>Como configurar em 3 passos:</strong><br>
+            1. Acesse <strong>script.google.com</strong> → Novo projeto → cole o código abaixo → Salve<br>
+            2. Clique em <strong>Implantar → Nova implantação → App da Web</strong> → Quem tem acesso: <em>Qualquer pessoa</em> → Implantar<br>
+            3. Copie a URL gerada e cole no campo abaixo → Salvar
+        </div>
+        <div style="margin-bottom:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:12px;font-weight:700;color:#555">Código para o Google Apps Script:</span>
+                <button class="btn btn-outline btn-sm" onclick="copiarAppsScript()">📋 Copiar código</button>
+            </div>
+            <div class="code-block" id="apps-script-code"></div>
+        </div>
+        <div class="form-row" style="margin-bottom:12px">
+            <input type="url" id="sheets-url"
+                   placeholder="https://script.google.com/macros/s/…/exec"
+                   style="flex:1;min-width:280px"
+                   oninput="updateSheetsStatus()">
+            <button class="btn btn-outline btn-sm" onclick="salvarURL()">💾 Salvar URL</button>
+        </div>
+        <div class="form-row">
+            <button class="btn btn-success" onclick="syncParaSheets()">⬆️ Enviar tudo para Sheets</button>
+            <button class="btn btn-outline" onclick="importarDeSheets()">⬇️ Importar do Sheets</button>
+            <button class="btn btn-outline btn-sm" onclick="exportHistory()">📊 Exportar CSV histórico</button>
+        </div>
+    </div>
+</div>
+
+</main>
+
+<!-- ═══════════════ PRINT AREA ═══════════════ -->
+<div id="print-area"><div class="print-grid" id="print-grid"></div></div>
+
+<!-- ═══════════════ MODAL: MOVIMENTAÇÃO MANUAL ═══════════════ -->
+<div class="overlay" id="mov-overlay">
+    <div class="modal">
+        <div class="modal-title" id="mov-title">📥 Registrar Entrada</div>
+        <div class="modal-body">
+            <div class="form-group"><label>Cor</label>
+                <select id="mov-color" onchange="updateMovSKU()"><option value="">Selecione</option></select>
+            </div>
+            <div class="form-group"><label>Número</label>
+                <select id="mov-num" onchange="updateMovSKU()"><option value="">Selecione</option></select>
+            </div>
+            <div class="form-group"><label>SKU</label>
+                <input type="text" id="mov-sku" readonly style="background:#f5f5f5;color:#555">
+            </div>
+            <div class="form-group"><label>Quantidade</label>
+                <input type="number" id="mov-qty" min="1" value="1">
+            </div>
+            <div class="form-group"><label>Observação</label>
+                <input type="text" id="mov-obs" placeholder="Ex: Compra NF 1234">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline btn-sm" onclick="closeMov()">Cancelar</button>
+            <button class="btn btn-primary" id="mov-confirm" onclick="confirmarMov()">✅ Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+/* ─────────────────────────────────────────────
+   CONFIGURAÇÃO SUPABASE
+   Tabela: public.usuarios_spt
+   Campos: id, usuario, senha, nome, perfil, ativo, created_at
+   NOTA: RLS desativado para testes. Ativar futuramente com Supabase Auth + bcrypt.
+───────────────────────────────────────────── */
+const SUPABASE_URL      = 'https://ymedhnfhisuyrihzovgo.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltZWRobmZoaXN1eXJpaHpvdmdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MjUyMjAsImV4cCI6MjA5NTUwMTIyMH0.jBhUxqtANVodgDmt-8KhLeKl0tbVztR1V7TefrZxMnc';
+
+/* ─────────────────────────────────────────────
+   URL PADRÃO DO GOOGLE SHEETS (FIX #2)
+   Pré-configurada; o usuário pode sobrescrever em Configurações.
+   Se o localStorage for limpo, volta para esta URL.
+───────────────────────────────────────────── */
+const DEFAULT_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzW1fnf-lMI4ZeRu-ZOV4Kf8hK_O9UV24di8nCLu5Nct8QfZp5NkIdJ45bNZcJkAlLp/exec';
+
+/* ─────────────────────────────────────────────
+   CONFIG DE CORES E NÚMEROS (inalterado)
+───────────────────────────────────────────── */
+const COLORS = [
+    { sigla:'PT', name:'Preto',    label:'PRETO',    hex:'#1a1a1a' },
+    { sigla:'BC', name:'Branco',   label:'BRANCO',   hex:'#c8c8c8' },
+    { sigla:'DO', name:'Dourado',  label:'DOURADO',  hex:'#c49a1a' },
+    { sigla:'ND', name:'Nude',     label:'NUDE',     hex:'#d4a896' },
+    { sigla:'VM', name:'Vermelho', label:'VERMELHO', hex:'#c0392b' },
+    { sigla:'PK', name:'Pink',     label:'PINK',     hex:'#ff69b4' },
+    { sigla:'RS', name:'Rosa',     label:'ROSA',     hex:'#f48fb1' },
+];
+const NUMBERS = Array.from({ length: 21 }, (_, i) => i + 16); // 16–36
+
+/* ─────────────────────────────────────────────
+   STORAGE (FIX #2: sheetsURL com padrão global)
+───────────────────────────────────────────── */
+const LS = {
+    stock:        () => JSON.parse(localStorage.getItem('spt_stock')   || '{}'),
+    history:      () => JSON.parse(localStorage.getItem('spt_history') || '[]'),
+    saveStock:     d => localStorage.setItem('spt_stock',   JSON.stringify(d)),
+    saveHistory:   d => localStorage.setItem('spt_history', JSON.stringify(d)),
+    // FIX #2: retorna URL salva pelo usuário OU a URL padrão definida no código
+    sheetsURL:    () => localStorage.getItem('spt_sheets_url') || DEFAULT_SHEETS_URL,
+    saveSheetsURL: u => localStorage.setItem('spt_sheets_url', u),
+    // Sessão de login
+    session:      () => JSON.parse(localStorage.getItem('spt_session') || 'null'),
+    saveSession:   s => localStorage.setItem('spt_session', JSON.stringify(s)),
+    clearSession:  () => localStorage.removeItem('spt_session'),
+};
+
+/* ─────────────────────────────────────────────
+   USUÁRIO ATUAL (preenchido após login)
+───────────────────────────────────────────── */
+let currentUser = null; // { usuario, nome, perfil }
+
+/* ─────────────────────────────────────────────
+   CONTROLE DE PERFIS (FIX #4)
+   Preparado para perfil 'operacao' no futuro.
+───────────────────────────────────────────── */
+function isAdmin() {
+    return currentUser && currentUser.perfil === 'administrador';
+}
+
+function canAccess(feature) {
+    if (!currentUser) return false;
+    if (currentUser.perfil === 'administrador') return true;
+    // Perfil 'operacao' — acesso limitado (futuro)
+    if (currentUser.perfil === 'operacao') {
+        return ['etiquetas','scanner','mobile','entrada','saida','estoque-consulta'].includes(feature);
+    }
+    return false;
+}
+
+/* ─────────────────────────────────────────────
+   LOGIN VIA SUPABASE REST API (sem CDN)
+   Consulta diretamente a tabela usuarios_spt.
+   NOTA: Em produção usar Supabase Auth + RLS + senhas criptografadas.
+───────────────────────────────────────────── */
+async function validateLoginSupabase(usuario, senha) {
+    const url = `${SUPABASE_URL}/rest/v1/usuarios_spt` +
+        `?usuario=eq.${encodeURIComponent(usuario)}` +
+        `&senha=eq.${encodeURIComponent(senha)}` +
+        `&ativo=eq.true` +
+        `&select=usuario,nome,perfil`;
+    const res = await fetch(url, {
+        headers: {
+            'apikey':        SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type':  'application/json',
+        }
+    });
+    if (!res.ok) throw new Error('Erro de rede: ' + res.status);
+    const data = await res.json();
+    return data.length > 0 ? data[0] : null;
+}
+
+async function doLogin() {
+    const usuario = document.getElementById('login-user').value.trim();
+    const senha   = document.getElementById('login-pass').value;
+    const errEl   = document.getElementById('login-err');
+    const btn     = document.getElementById('login-btn');
+
+    errEl.textContent = '';
+    if (!usuario || !senha) { errEl.textContent = 'Preencha usuário e senha.'; return; }
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Verificando…';
+    try {
+        const user = await validateLoginSupabase(usuario, senha);
+        if (user) {
+            currentUser = { usuario: user.usuario, nome: user.nome, perfil: user.perfil };
+            LS.saveSession(currentUser);
+            onLoginSuccess();
+        } else {
+            errEl.textContent = 'Usuário, senha ou conta inválidos.';
+            document.getElementById('login-pass').value = '';
+        }
+    } catch(e) {
+        errEl.textContent = 'Erro de conexão. Verifique sua internet.';
+        console.error('Login error:', e);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '🔐 Entrar';
+    }
+}
+
+function onLoginSuccess() {
+    document.getElementById('login-overlay').classList.remove('open');
+    document.getElementById('main-header').style.display = '';
+    document.getElementById('main-content').style.display = '';
+    // Atualiza header com nome do usuário
+    document.getElementById('user-nome-hdr').textContent  = currentUser.nome;
+    document.getElementById('user-perfil-hdr').textContent = `(${currentUser.perfil})`;
+    // Inicializa sistema
+    initApp();
+}
+
+function doLogout() {
+    if (!confirm('Deseja sair do sistema?')) return;
+    LS.clearSession();
+    currentUser = null;
+    document.getElementById('main-header').style.display  = 'none';
+    document.getElementById('main-content').style.display = 'none';
+    document.getElementById('login-overlay').classList.add('open');
+    document.getElementById('login-user').value = '';
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-err').textContent = '';
+    // Para câmera mobile se ativa
+    stopMobileCamera();
+}
+
+function checkSession() {
+    const session = LS.session();
+    if (session && session.usuario) {
+        currentUser = session;
+        onLoginSuccess();
+    } else {
+        // Mostra tela de login
+        document.getElementById('login-overlay').classList.add('open');
+        setTimeout(() => document.getElementById('login-user').focus(), 300);
+    }
+}
+
+/* ─────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────── */
+const mkSKU = (s, n) => `SPT-${s}-${n}`;
+const byS   = s => COLORS.find(c => c.sigla === s);
+const today = () => new Date().toISOString().slice(0, 10);
+
+function fmtDate(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString('pt-BR') + ' ' +
+           d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+}
+
+function parseSKU(raw) {
+    const m = (raw || '').trim().toUpperCase().match(/^SPT-([A-Z]{2})-(\d{1,3})$/);
+    if (!m) return null;
+    const c = byS(m[1]);
+    const n = parseInt(m[2]);
+    if (!c || n < 16 || n > 36) return null;
+    return { sigla: m[1], num: n, color: c, sku: mkSKU(m[1], n) };
+}
+
+let _toastTm;
+function toast(msg, type = 'tok') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `show ${type}`;
+    clearTimeout(_toastTm);
+    _toastTm = setTimeout(() => { el.className = ''; }, 3500);
+}
+
+/* ─────────────────────────────────────────────
+   SOM
+───────────────────────────────────────────── */
+function beep(type = 'ok') {
+    try {
+        const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        gain.gain.value = 0.25;
+        if (type === 'ok') { osc.frequency.value = 880; osc.start(); osc.stop(ctx.currentTime + 0.08); }
+        else               { osc.frequency.value = 220; osc.start(); osc.stop(ctx.currentTime + 0.25); }
+    } catch(_) {}
+}
+
+/* ─────────────────────────────────────────────
+   CODE 128 B — IMPLEMENTAÇÃO NATIVA (inalterada)
+───────────────────────────────────────────── */
+(function () {
+    const P = (
+      '11011001100 11001101100 11001100110 10010011000 10010001100 ' +
+      '10001001100 10011001000 10011000100 10001100100 11001001000 ' +
+      '11001000100 11000100100 10110011100 10011011100 10011001110 ' +
+      '10111001100 10011101100 10011100110 11001110010 11001011100 ' +
+      '11001001110 11011100100 11001110100 11101101110 11101001100 ' +
+      '11100101100 11100100110 11101100100 11100110100 11100110010 ' +
+      '11011011000 11011000110 11000110110 10100011000 10001011000 ' +
+      '10001000110 10110001000 10001101000 10001100010 11010001000 ' +
+      '11000101000 11000100010 10110111000 10110001110 10001101110 ' +
+      '10111011000 10111000110 10001110110 11101110110 11010001110 ' +
+      '11000101110 11011101000 11011100010 11011101110 11101011000 ' +
+      '11101000110 11100010110 11101101000 11101100010 11100011010 ' +
+      '11101111010 11001000010 11110001010 10100110000 10100001100 ' +
+      '10010110000 10010000110 10000101100 10000100110 10110010000 ' +
+      '10110000100 10011010000 10011000010 10000110100 10000110010 ' +
+      '11000010010 11001010000 11110111010 11000010100 10001111010 ' +
+      '10100111100 10010111100 10010011110 10111100100 10011110100 ' +
+      '10011110010 11110100100 11110010100 11110010010 11011011110 ' +
+      '11011110110 11110110110 10101111000 10100011110 10001011110 ' +
+      '10111101000 10111100010 11110101000 11110100010 10111011110 ' +
+      '10111101110 11101011110 11110101110 11010000100 11010010000 ' +
+      '11010011110'
+    ).split(' ');
+    const START_B = 104;
+    const STOP    = '1100011101011';
+
+    window.code128SVG = function (text, opts = {}) {
+        const bw = opts.barWidth || opts.width || 1.5;
+        const h  = opts.height || 40;
+        const mg = opts.margin || 5;
+        const vals = [START_B];
+        let check  = START_B;
+        for (let i = 0; i < text.length; i++) {
+            const v = text.charCodeAt(i) - 32;
+            if (v < 0 || v > 94) throw new Error('Char inválido: ' + text[i]);
+            vals.push(v);
+            check += (i + 1) * v;
+        }
+        vals.push(check % 103);
+        let bits = '';
+        vals.forEach(v => { bits += P[v]; });
+        bits += STOP;
+        const totalW = bits.length * bw + mg * 2;
+        const totalH = h + mg * 2;
+        let rects = ''; let runStart = 0; let inBar = true;
+        for (let i = 0; i <= bits.length; i++) {
+            const isBar = bits[i] === '1';
+            if (i === bits.length || isBar !== inBar) {
+                if (inBar && i > runStart) {
+                    const x = (mg + runStart * bw).toFixed(2);
+                    const w = ((i - runStart) * bw).toFixed(2);
+                    rects += `<rect x="${x}" y="${mg}" width="${w}" height="${h}"/>`;
+                }
+                inBar = isBar; runStart = i;
+            }
+        }
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW.toFixed(1)}" height="${totalH}" viewBox="0 0 ${totalW.toFixed(1)} ${totalH}"><rect width="${totalW.toFixed(1)}" height="${totalH}" fill="white"/><g fill="black">${rects}</g></svg>`;
+    };
+})();
+
+function genBarcode(text, opts = {}) {
+    try {
+        const svg = code128SVG(text, opts);
+        const b64 = btoa(unescape(encodeURIComponent(svg)));
+        return 'data:image/svg+xml;base64,' + b64;
+    } catch (e) { console.error('Barcode error:', text, e); return null; }
+}
+
+/* ─────────────────────────────────────────────
+   TABS
+───────────────────────────────────────────── */
+function showTab(name) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(`panel-${name}`).classList.add('active');
+    document.querySelector(`.nav-tab[data-tab="${name}"]`).classList.add('active');
+    if (name === 'estoque')   renderStock();
+    if (name === 'historico') renderHistory();
+    if (name === 'scanner')   setTimeout(() => document.getElementById('scan-input')?.focus(), 100);
+}
+
+/* ─────────────────────────────────────────────
+   BUILD GRADE (inalterado)
+───────────────────────────────────────────── */
+function buildGrid() {
+    const grid  = document.getElementById('sku-grid');
+    const thead = grid.querySelector('thead tr');
+    const tbody = grid.querySelector('tbody');
+    NUMBERS.forEach(n => {
+        const th = document.createElement('th'); th.textContent = n; thead.appendChild(th);
+    });
+    document.querySelectorAll('#q-color, #sf-color, #hf-color, #mov-color').forEach(sel => {
+        COLORS.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.sigla; opt.textContent = c.name;
+            sel.appendChild(opt.cloneNode(true));
+        });
+    });
+    const movNum = document.getElementById('mov-num');
+    NUMBERS.forEach(n => {
+        const opt = document.createElement('option'); opt.value = n; opt.textContent = n; movNum.appendChild(opt);
+    });
+    COLORS.forEach(color => {
+        const tr  = document.createElement('tr');
+        const tdC = document.createElement('td'); tdC.className = 'col-color';
+        tdC.innerHTML = `<span class="dot" style="background:${color.hex}"></span>${color.name}`;
+        tr.appendChild(tdC);
+        NUMBERS.forEach(n => {
+            const td  = document.createElement('td');
+            const inp = document.createElement('input');
+            inp.type = 'number'; inp.className = 'qty-input';
+            inp.min = 0; inp.max = 999; inp.value = ''; inp.placeholder = '0';
+            inp.id = `g-${mkSKU(color.sigla, n)}`;
+            inp.dataset.sku   = mkSKU(color.sigla, n);
+            inp.dataset.color = color.sigla;
+            inp.dataset.num   = n;
+            inp.addEventListener('input', () => {
+                inp.classList.toggle('filled', (parseInt(inp.value) || 0) > 0);
+                updateContador();
+            });
+            inp.addEventListener('keydown', e => {
+                if (e.key === 'Tab' || e.key === 'Enter') {
+                    e.preventDefault();
+                    const all  = [...document.querySelectorAll('.qty-input')];
+                    const next = all[all.indexOf(inp) + 1];
+                    if (next) { next.focus(); next.select(); }
+                }
+            });
+            td.appendChild(inp); tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+    updateContador();
+}
+
+function updateContador() {
+    let t = 0;
+    document.querySelectorAll('.qty-input').forEach(i => t += parseInt(i.value) || 0);
+    document.getElementById('contador').textContent =
+        t > 0 ? `${t} etiqueta${t !== 1 ? 's' : ''} selecionada${t !== 1 ? 's' : ''}` : '';
+}
+
+/* ─────────────────────────────────────────────
+   LANÇAMENTO RÁPIDO (inalterado)
+───────────────────────────────────────────── */
+function quickAdd() {
+    const s   = document.getElementById('q-color').value;
+    const n   = document.getElementById('q-num').value;
+    const qty = parseInt(document.getElementById('q-qty').value) || 1;
+    if (!s || !n) { toast('Selecione cor e número!', 'terr'); return; }
+    const inp = document.getElementById(`g-${mkSKU(s, n)}`);
+    if (!inp) { toast('Número inválido!', 'terr'); return; }
+    inp.value = (parseInt(inp.value) || 0) + qty;
+    inp.classList.add('filled');
+    inp.scrollIntoView({ behavior:'smooth', block:'center' });
+    updateContador();
+    toast(`✅ ${mkSKU(s, n)}: +${qty}`);
+}
+
+function preencherTudo() {
+    const v = prompt('Quantidade para todos os SKUs:', '1');
+    const n = parseInt(v);
+    if (!n || n <= 0) return;
+    document.querySelectorAll('.qty-input').forEach(i => { i.value = n; i.classList.add('filled'); });
+    updateContador();
+    toast(`✅ Todos preenchidos com ${n}`);
+}
+
+/* ─────────────────────────────────────────────
+   GERAR ETIQUETAS (inalterado — preserva 50×30mm)
+───────────────────────────────────────────── */
+function labelFS(text) {
+    const l   = text.length;
+    const mmP = Math.min(9, 47 / (l * 0.70));
+    const pxS = Math.min(19, Math.round(mmP * 2.15));
+    return { screen: pxS + 'px', print: mmP.toFixed(2) + 'mm' };
+}
+
+function gerarEtiquetas() {
+    const items = [];
+    document.querySelectorAll('.qty-input').forEach(inp => {
+        const qty = parseInt(inp.value) || 0;
+        if (qty > 0) items.push({ sku: inp.dataset.sku, color: inp.dataset.color, num: inp.dataset.num, qty });
+    });
+    if (!items.length) { toast('Preencha ao menos uma quantidade!', 'terr'); return; }
+
+    const preview = document.getElementById('labels-preview');
+    const print   = document.getElementById('print-grid');
+    preview.innerHTML = ''; print.innerHTML = '';
+    let total = 0;
+
+    items.forEach(it => {
+        const c  = byS(it.color);
+        const txt = `${c.label} - ${it.num}`;
+        const fs  = labelFS(txt);
+        const bcScreen = genBarcode(it.sku, { width: 1.5, height: 44, margin: 2 });
+        const bcPrint  = genBarcode(it.sku, { width: 1.0, height: 30, margin: 1 });
+
+        for (let i = 0; i < it.qty; i++) {
+            total++;
+            const pDiv = document.createElement('div'); pDiv.className = 'preview-label';
+            pDiv.innerHTML = `<div class="lbl-text" style="font-size:${fs.screen}">${txt}</div>
+                ${bcScreen ? `<img class="lbl-bc-img" src="${bcScreen}" alt="barcode">` : `<div style="color:#f00;font-size:10px">Erro barcode</div>`}
+                <div class="lbl-sku">${it.sku}</div>`;
+            preview.appendChild(pDiv);
+
+            const rDiv = document.createElement('div'); rDiv.className = 'print-label';
+            rDiv.innerHTML = `<div class="lbl-text" style="font-size:${fs.print}">${txt}</div>
+                ${bcPrint ? `<img class="lbl-bc-img" src="${bcPrint}" alt="barcode">` : ''}
+                <div class="lbl-sku">${it.sku}</div>`;
+            print.appendChild(rDiv);
+        }
+    });
+
+    document.getElementById('preview-card').style.display = 'block';
+    document.getElementById('preview-count').textContent =
+        `${total} etiqueta${total !== 1 ? 's' : ''} gerada${total !== 1 ? 's' : ''}`;
+    document.getElementById('preview-card').scrollIntoView({ behavior:'smooth' });
+    toast(`✅ ${total} etiquetas geradas com código de barras!`);
+}
+
+function imprimir() {
+    if (!document.getElementById('print-grid').children.length) { toast('Gere as etiquetas primeiro!', 'terr'); return; }
+    window.print();
+}
+
+function limparGrade() {
+    if (!confirm('Limpar todos os lançamentos da grade?')) return;
+    document.querySelectorAll('.qty-input').forEach(i => { i.value=''; i.classList.remove('filled'); });
+    document.getElementById('preview-card').style.display = 'none';
+    document.getElementById('labels-preview').innerHTML = '';
+    document.getElementById('print-grid').innerHTML = '';
+    updateContador(); toast('Grade limpa!');
+}
+
+/* ─────────────────────────────────────────────
+   SCANNER (LEITOR FÍSICO) — FIX #5: inclui usuário
+───────────────────────────────────────────── */
+let scanMode = 'entrada';
+let scanSessionLog = [];
+
+function setScanMode(mode) {
+    scanMode = mode;
+    document.getElementById('mode-in').className  = 'mode-btn' + (mode === 'entrada' ? ' active-in'  : '');
+    document.getElementById('mode-out').className = 'mode-btn' + (mode === 'saida'   ? ' active-out' : '');
+    document.getElementById('scan-input').focus();
+}
+
+function initScanner() {
+    const inp = document.getElementById('scan-input');
+    inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            const val = inp.value.trim(); inp.value = '';
+            if (val) processScan(val);
+        }
+    });
+}
+
+function processScan(raw) {
+    const parsed = parseSKU(raw);
+    const qty    = parseInt(document.getElementById('scan-qty').value) || 1;
+
+    if (!parsed) {
+        showScanResult('err', '❌', `SKU inválido: "${raw}"`, 'Formato esperado: SPT-XX-NN (ex: SPT-PT-32)', '');
+        addScanLog('err', raw, qty);
+        beep('err'); return;
+    }
+
+    const stock = LS.stock();
+    const curr  = stock[parsed.sku] || 0;
+
+    if (scanMode === 'saida' && qty > curr) {
+        showScanResult('err', '❌', 'Estoque insuficiente',
+            `${parsed.color.label} - ${parsed.num} | SKU: ${parsed.sku}`,
+            `Saldo atual: ${curr} | Tentou: −${qty}`);
+        addScanLog('err', parsed.sku, qty, `Sem estoque (saldo: ${curr})`);
+        beep('err'); return;
+    }
+
+    const novo = scanMode === 'entrada' ? curr + qty : curr - qty;
+    stock[parsed.sku] = novo;
+    LS.saveStock(stock);
+
+    // FIX #5: incluir usuario e nomeUsuario no histórico
+    const entry = {
+        id: Date.now(), timestamp: new Date().toISOString(),
+        type: scanMode, sku: parsed.sku,
+        colorSigla: parsed.sigla, colorName: parsed.color.name, num: parsed.num,
+        qty, balanceAfter: novo, obs: 'Scanner',
+        usuario:     currentUser?.usuario     || 'desconhecido',
+        nomeUsuario: currentUser?.nome        || currentUser?.usuario || 'desconhecido',
+    };
+    const hist = LS.history();
+    hist.unshift(entry);
+    LS.saveHistory(hist);
+
+    const icone = scanMode === 'entrada' ? '✅' : '📤';
+    showScanResult('ok', icone,
+        `${parsed.color.label} - ${parsed.num}`,
+        `SKU: ${parsed.sku} | ${scanMode === 'entrada' ? '+' : '−'}${qty} un.`,
+        `Saldo: ${curr} → ${novo}`);
+    addScanLog(scanMode === 'entrada' ? 'in' : 'out', parsed.sku, qty, `${curr} → ${novo}`);
+    beep('ok');
+    autoSyncEntry(entry);
+}
+
+function showScanResult(type, icon, title, detail, stock) {
+    const el = document.getElementById('scan-result');
+    el.className = `scan-result ${type}`; el.style.display = 'flex';
+    document.getElementById('scan-result-icon').textContent   = icon;
+    document.getElementById('scan-result-title').textContent  = title;
+    document.getElementById('scan-result-detail').textContent = detail;
+    document.getElementById('scan-result-stock').textContent  = stock;
+}
+
+function addScanLog(type, sku, qty, detail = '') {
+    const now  = new Date();
+    const time = now.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    scanSessionLog.unshift({ type, sku, qty, detail, time });
+    const log    = document.getElementById('scan-log');
+    const labels = { in:'ENTRADA', out:'SAÍDA', err:'ERRO' };
+    log.innerHTML = scanSessionLog.map(s =>
+        `<div class="scan-log-item">
+            <span class="scan-log-badge sl-${s.type}">${labels[s.type] || s.type}</span>
+            <strong>${s.sku}</strong>
+            <span style="color:#555">× ${s.qty}</span>
+            ${s.detail ? `<span style="color:#888;font-size:12px">${s.detail}</span>` : ''}
+            <span class="scan-log-time">${s.time}</span>
+        </div>`
+    ).join('');
+    document.getElementById('scan-session-count').textContent =
+        `${scanSessionLog.length} leitura${scanSessionLog.length !== 1 ? 's' : ''} nesta sessão`;
+}
+
+function clearScanLog() {
+    scanSessionLog = [];
+    document.getElementById('scan-log').innerHTML = '<div class="empty-state"><span class="ico">📡</span>Aguardando leitura…</div>';
+    document.getElementById('scan-result').style.display = 'none';
+    document.getElementById('scan-session-count').textContent = '0 leituras nesta sessão';
+}
+
+/* ─────────────────────────────────────────────
+   MOBILE SCANNER (FIX #6 / #7)
+   Usa BarcodeDetector nativo quando disponível.
+   Fallback: lançamento manual sempre disponível.
+───────────────────────────────────────────── */
+let mobileMode          = 'entrada';
+let mobileQty           = 1;
+let mobileStream        = null;
+let mobileCameraActive  = false;
+let mobileScanAnimId    = null;
+let mobileDetector      = null;
+let mobileSessionLog    = [];
+// Debounce: evita leitura duplicada em menos de 1,5 s
+let mobileLastScan      = { code: '', time: 0 };
+const MOBILE_DEBOUNCE   = 1500;
+
+function setMobileMode(mode) {
+    mobileMode = mode;
+    document.getElementById('mb-mode-in').className  = 'mobile-mode-btn' + (mode === 'entrada' ? ' active-in'  : '');
+    document.getElementById('mb-mode-out').className = 'mobile-mode-btn' + (mode === 'saida'   ? ' active-out' : '');
+}
+
+function changeMobileQty(delta) {
+    mobileQty = Math.max(1, mobileQty + delta);
+    document.getElementById('mb-qty-val').textContent = mobileQty;
+}
+
+async function startMobileCamera() {
+    const videoEl = document.getElementById('mobile-video');
+    const noSupEl = document.getElementById('mb-no-support');
+    const scanLine = document.getElementById('mb-scan-line');
+    noSupEl.style.display = 'none';
+
+    try {
+        // Solicita câmera traseira (environment) para mobile
+        mobileStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }
+        });
+        videoEl.srcObject = mobileStream;
+        await videoEl.play();
+        mobileCameraActive = true;
+        document.getElementById('mb-btn-start').style.display = 'none';
+        document.getElementById('mb-btn-stop').style.display  = '';
+        scanLine.style.display = '';
+
+        // Tenta usar BarcodeDetector nativo (Chrome 83+ / Android Chrome)
+        if ('BarcodeDetector' in window) {
+            try {
+                mobileDetector = new BarcodeDetector({ formats: ['code_128', 'qr_code', 'ean_13', 'ean_8', 'code_39'] });
+                mobileScanLoop();
+                toast('📷 Câmera iniciada (BarcodeDetector ativo)');
+            } catch(e) {
+                mobileDetector = null;
+                showMobileFallbackMsg();
+            }
+        } else {
+            showMobileFallbackMsg();
+        }
+    } catch(e) {
+        noSupEl.style.display = 'flex';
+        scanLine.style.display = 'none';
+        toast('Câmera indisponível. Use o campo manual.', 'twarn');
+    }
+}
+
+function showMobileFallbackMsg() {
+    toast('BarcodeDetector não suportado. Use o campo manual abaixo.', 'twarn');
+}
+
+async function mobileScanLoop() {
+    if (!mobileCameraActive || !mobileDetector) return;
+    const videoEl = document.getElementById('mobile-video');
+    try {
+        const barcodes = await mobileDetector.detect(videoEl);
+        if (barcodes.length > 0) {
+            const code = barcodes[0].rawValue;
+            const now  = Date.now();
+            // Debounce: ignora mesmo código em < 1,5 s
+            if (code !== mobileLastScan.code || (now - mobileLastScan.time) > MOBILE_DEBOUNCE) {
+                mobileLastScan = { code, time: now };
+                processMobileScan(code);
+            }
+        }
+    } catch(_) {}
+    if (mobileCameraActive) {
+        mobileScanAnimId = requestAnimationFrame(mobileScanLoop);
+    }
+}
+
+function stopMobileCamera() {
+    mobileCameraActive = false;
+    if (mobileScanAnimId) { cancelAnimationFrame(mobileScanAnimId); mobileScanAnimId = null; }
+    if (mobileStream) { mobileStream.getTracks().forEach(t => t.stop()); mobileStream = null; }
+    const videoEl = document.getElementById('mobile-video');
+    if (videoEl) videoEl.srcObject = null;
+    document.getElementById('mb-btn-start').style.display = '';
+    document.getElementById('mb-btn-stop').style.display  = 'none';
+    document.getElementById('mb-scan-line').style.display = 'none';
+}
+
+function processMobileScanFromInput() {
+    const inp = document.getElementById('mb-manual-input');
+    const val = inp.value.trim();
+    if (val) { processMobileScan(val); inp.value = ''; }
+}
+
+// FIX #7: lógica de leitura mobile (entrada/saída, debounce, usuário)
+function processMobileScan(raw) {
+    const parsed = parseSKU(raw);
+
+    if (!parsed) {
+        showMobileFeedback('err', '❌ Código inválido', `"${raw}" — Formato: SPT-XX-NN`);
+        addMobileLog('err', raw, mobileQty, 'Código inválido');
+        beep('err'); return;
+    }
+
+    const stock = LS.stock();
+    const curr  = stock[parsed.sku] || 0;
+
+    if (mobileMode === 'saida' && mobileQty > curr) {
+        showMobileFeedback('err', '❌ Estoque insuficiente',
+            `${parsed.color.label} Nº${parsed.num} | Saldo: ${curr} | Tentou: −${mobileQty}`);
+        addMobileLog('err', parsed.sku, mobileQty, `Insuficiente (saldo: ${curr})`);
+        beep('err'); return;
+    }
+
+    const novo = mobileMode === 'entrada' ? curr + mobileQty : curr - mobileQty;
+    stock[parsed.sku] = novo;
+    LS.saveStock(stock);
+
+    // FIX #5: usuário registrado na movimentação
+    const entry = {
+        id: Date.now(), timestamp: new Date().toISOString(),
+        type: mobileMode, sku: parsed.sku,
+        colorSigla: parsed.sigla, colorName: parsed.color.name, num: parsed.num,
+        qty: mobileQty, balanceAfter: novo, obs: 'Scanner Mobile',
+        usuario:     currentUser?.usuario || 'desconhecido',
+        nomeUsuario: currentUser?.nome    || currentUser?.usuario || 'desconhecido',
+    };
+    const hist = LS.history();
+    hist.unshift(entry);
+    LS.saveHistory(hist);
+
+    const sinal = mobileMode === 'entrada' ? '+' : '−';
+    showMobileFeedback('ok',
+        `${mobileMode === 'entrada' ? '✅' : '📤'} ${parsed.color.label} Nº${parsed.num}`,
+        `SKU: ${parsed.sku} | ${sinal}${mobileQty} un. | Saldo: ${curr} → ${novo}`);
+    addMobileLog(mobileMode === 'entrada' ? 'in' : 'out', parsed.sku, mobileQty, `${curr} → ${novo}`);
+    beep('ok');
+    autoSyncEntry(entry);
+}
+
+function showMobileFeedback(type, title, detail) {
+    const el = document.getElementById('mb-feedback');
+    el.className = `mobile-feedback ${type}`;
+    document.getElementById('mb-fb-title').textContent  = title;
+    document.getElementById('mb-fb-detail').textContent = detail;
+    clearTimeout(el._tm);
+    el._tm = setTimeout(() => { el.className = 'mobile-feedback'; }, 3000);
+}
+
+function addMobileLog(type, sku, qty, detail = '') {
+    const now  = new Date();
+    const time = now.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    mobileSessionLog.unshift({ type, sku, qty, detail, time });
+    if (mobileSessionLog.length > 50) mobileSessionLog.pop();
+    const log    = document.getElementById('mb-log');
+    const labels = { in:'ENTRADA', out:'SAÍDA', err:'ERRO' };
+    log.innerHTML = mobileSessionLog.map(s =>
+        `<div class="mobile-log-item">
+            <span class="scan-log-badge sl-${s.type}">${labels[s.type] || s.type}</span>
+            <strong>${s.sku}</strong>
+            <span style="color:#555">× ${s.qty}</span>
+            ${s.detail ? `<span style="color:#888;font-size:12px">${s.detail}</span>` : ''}
+            <span class="scan-log-time">${s.time}</span>
+        </div>`
+    ).join('');
+    document.getElementById('mb-session-count').textContent =
+        `${mobileSessionLog.length} leitura${mobileSessionLog.length !== 1 ? 's' : ''}`;
+}
+
+function clearMobileLog() {
+    mobileSessionLog = [];
+    document.getElementById('mb-log').innerHTML = '<div class="empty-state"><span class="ico">📱</span>Aguardando leitura…</div>';
+    document.getElementById('mb-feedback').className = 'mobile-feedback';
+    document.getElementById('mb-session-count').textContent = '0 leituras';
+}
+
+/* ─────────────────────────────────────────────
+   ESTOQUE — MATRIX (FIX #8) + CARDS MOBILE (FIX #9)
+───────────────────────────────────────────── */
+function buildStockMatrix() {
+    const thead = document.querySelector('#stock-matrix-table thead tr');
+    // Cabeçalho de números (só constrói uma vez)
+    if (thead.children.length === 1) {
+        NUMBERS.forEach(n => {
+            const th = document.createElement('th'); th.textContent = n; thead.appendChild(th);
+        });
+    }
+}
+
+function renderStockMatrix(stock, fColor, fStat) {
+    const tbody = document.getElementById('stock-matrix-tbody');
+    tbody.innerHTML = '';
+    COLORS.forEach(color => {
+        if (fColor && color.sigla !== fColor) return;
+        const tr  = document.createElement('tr');
+        const tdC = document.createElement('td'); tdC.className = 'col-color';
+        tdC.innerHTML = `<span class="dot" style="background:${color.hex}"></span>${color.name}`;
+        tr.appendChild(tdC);
+        NUMBERS.forEach(n => {
+            const s   = mkSKU(color.sigla, n);
+            const qty = stock[s] || 0;
+            if (fStat === 'com'  && qty === 0) { const td = document.createElement('td'); td.innerHTML = '<span class="matrix-cell zero">—</span>'; tr.appendChild(td); return; }
+            if (fStat === 'zero' && qty > 0)   { const td = document.createElement('td'); td.innerHTML = `<span class="matrix-cell pos">${qty}</span>`; tr.appendChild(td); return; }
+            const cls = qty === 0 ? 'zero' : qty <= 5 ? 'low' : 'pos';
+            const td  = document.createElement('td');
+            td.innerHTML = `<span class="matrix-cell ${cls}" title="${s}" onclick="openMov('${qty>0?'saida':'entrada'}','${s}')">${qty}</span>`;
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+}
+
+function renderStockCards(stock, fColor, fStat) {
+    const wrap = document.getElementById('stock-cards');
+    wrap.innerHTML = '';
+    COLORS.forEach(color => {
+        if (fColor && color.sigla !== fColor) return;
+        const card = document.createElement('div'); card.className = 'stock-card';
+        const title = document.createElement('div'); title.className = 'stock-card-title';
+        title.innerHTML = `<span class="dot" style="background:${color.hex}"></span>${color.name}`;
+        card.appendChild(title);
+        const items = document.createElement('div'); items.className = 'stock-card-items';
+        let hasItems = false;
+        NUMBERS.forEach(n => {
+            const s   = mkSKU(color.sigla, n);
+            const qty = stock[s] || 0;
+            if (fStat === 'com'  && qty === 0) return;
+            if (fStat === 'zero' && qty > 0)   return;
+            hasItems = true;
+            const cls  = qty === 0 ? 'zero' : qty <= 5 ? 'low' : 'pos';
+            const chip = document.createElement('span');
+            chip.className = `stock-chip ${cls}`;
+            chip.textContent = `${n}: ${qty}`;
+            chip.title = s;
+            chip.onclick = () => openMov(qty > 0 ? 'saida' : 'entrada', s);
+            items.appendChild(chip);
+        });
+        if (!hasItems) return;
+        card.appendChild(items);
+        wrap.appendChild(card);
+    });
+    if (!wrap.children.length) wrap.innerHTML = '<div class="empty-state"><span class="ico">📦</span>Nenhum item</div>';
+}
+
+function renderStock() {
+    const stock  = LS.stock();
+    const search = (document.getElementById('sf-search')?.value || '').toLowerCase();
+    const fColor = document.getElementById('sf-color')?.value  || '';
+    const fStat  = document.getElementById('sf-status')?.value || '';
+
+    // Stats
+    const all = COLORS.flatMap(c => NUMBERS.map(n => stock[mkSKU(c.sigla, n)] || 0));
+    document.getElementById('s-skus').textContent  = all.length;
+    document.getElementById('s-total').textContent = all.reduce((a,b) => a+b, 0);
+    document.getElementById('s-com').textContent   = all.filter(q => q > 0).length;
+    document.getElementById('s-zero').textContent  = all.filter(q => q === 0).length;
+
+    // FIX #8: Matriz desktop
+    renderStockMatrix(stock, fColor, fStat);
+    // FIX #9: Cards mobile
+    renderStockCards(stock, fColor, fStat);
+
+    // Tabela detalhada (desktop, com filtro de texto)
+    let rows = [];
+    COLORS.forEach(c => NUMBERS.forEach(n => {
+        const s = mkSKU(c.sigla, n);
+        rows.push({ sku:s, color:c, num:n, qty: stock[s] || 0 });
+    }));
+    if (search) rows = rows.filter(r => r.sku.toLowerCase().includes(search) || r.color.name.toLowerCase().includes(search));
+    if (fColor) rows = rows.filter(r => r.color.sigla === fColor);
+    if (fStat === 'com')  rows = rows.filter(r => r.qty > 0);
+    if (fStat === 'zero') rows = rows.filter(r => r.qty === 0);
+
+    const tbody = document.getElementById('stock-tbody');
+    tbody.innerHTML = rows.length ? rows.map(r => {
+        const bc = r.qty === 0 ? 'badge-zero' : r.qty <= 5 ? 'badge-low' : 'badge-ok';
+        return `<tr>
+            <td><strong>${r.sku}</strong></td>
+            <td><span class="dot" style="background:${r.color.hex}"></span>${r.color.name}</td>
+            <td><strong>${r.num}</strong></td>
+            <td><span class="badge ${bc}" style="font-size:13px">${r.qty}</span></td>
+            <td>
+                <button class="btn btn-success btn-sm" onclick="openMov('entrada','${r.sku}')">+&nbsp;Entrada</button>
+                <button class="btn btn-warning btn-sm" onclick="openMov('saida','${r.sku}')" ${r.qty === 0 ? 'disabled' : ''}>−&nbsp;Saída</button>
+            </td>
+        </tr>`;
+    }).join('') :
+    `<tr><td colspan="5"><div class="empty-state"><span class="ico">📦</span>Nenhum item</div></td></tr>`;
+}
+
+/* ─────────────────────────────────────────────
+   MODAL MOVIMENTAÇÃO MANUAL — FIX #5: inclui usuário
+───────────────────────────────────────────── */
+let _movType = 'entrada';
+
+function openMov(type, skuPreset = null) {
+    _movType = type;
+    const isE = type === 'entrada';
+    document.getElementById('mov-title').textContent   = isE ? '📥 Registrar Entrada' : '📤 Registrar Saída';
+    document.getElementById('mov-confirm').textContent = isE ? '✅ Confirmar Entrada'  : '✅ Confirmar Saída';
+    document.getElementById('mov-confirm').className   = `btn ${isE ? 'btn-success' : 'btn-warning'}`;
+    document.getElementById('mov-qty').value = 1;
+    document.getElementById('mov-obs').value = '';
+    if (skuPreset) {
+        const p = parseSKU(skuPreset);
+        if (p) { document.getElementById('mov-color').value = p.sigla; document.getElementById('mov-num').value = p.num; updateMovSKU(); }
+    } else {
+        document.getElementById('mov-color').value = '';
+        document.getElementById('mov-num').value   = '';
+        document.getElementById('mov-sku').value   = '';
+    }
+    document.getElementById('mov-overlay').classList.add('open');
+}
+
+function closeMov() { document.getElementById('mov-overlay').classList.remove('open'); }
+
+function updateMovSKU() {
+    const s = document.getElementById('mov-color').value;
+    const n = document.getElementById('mov-num').value;
+    document.getElementById('mov-sku').value = s && n ? mkSKU(s, n) : '';
+}
+
+function confirmarMov() {
+    const sigla = document.getElementById('mov-color').value;
+    const num   = document.getElementById('mov-num').value;
+    const qty   = parseInt(document.getElementById('mov-qty').value) || 0;
+    const obs   = document.getElementById('mov-obs').value.trim();
+    if (!sigla || !num) { toast('Selecione cor e número!', 'terr'); return; }
+    if (qty <= 0)       { toast('Quantidade inválida!',    'terr'); return; }
+
+    const s     = mkSKU(sigla, num);
+    const c     = byS(sigla);
+    const stock = LS.stock();
+    const curr  = stock[s] || 0;
+    if (_movType === 'saida' && qty > curr) { toast(`Estoque insuficiente! Saldo: ${curr}`, 'terr'); return; }
+
+    const novo   = _movType === 'entrada' ? curr + qty : curr - qty;
+    stock[s] = novo;
+    LS.saveStock(stock);
+
+    // FIX #5: usuário na movimentação manual
+    const entry = {
+        id: Date.now(), timestamp: new Date().toISOString(),
+        type: _movType, sku: s,
+        colorSigla: sigla, colorName: c.name, num: parseInt(num),
+        qty, balanceAfter: novo, obs,
+        usuario:     currentUser?.usuario || 'desconhecido',
+        nomeUsuario: currentUser?.nome    || currentUser?.usuario || 'desconhecido',
+    };
+    const hist = LS.history();
+    hist.unshift(entry);
+    LS.saveHistory(hist);
+
+    closeMov();
+    toast(`✅ ${_movType === 'entrada' ? 'Entrada' : 'Saída'}: ${s} (${qty} un.)`);
+    renderStock();
+    autoSyncEntry(entry);
+}
+
+/* ─────────────────────────────────────────────
+   HISTÓRICO — FIX #5: exibe usuário
+───────────────────────────────────────────── */
+function renderHistory() {
+    let hist = LS.history();
+    const fType  = document.getElementById('hf-type')?.value  || '';
+    const fColor = document.getElementById('hf-color')?.value || '';
+    const fFrom  = document.getElementById('hf-from')?.value  || '';
+    const fTo    = document.getElementById('hf-to')?.value    || '';
+    if (fType)  hist = hist.filter(h => h.type === fType);
+    if (fColor) hist = hist.filter(h => h.colorSigla === fColor);
+    if (fFrom)  hist = hist.filter(h => h.timestamp.slice(0,10) >= fFrom);
+    if (fTo)    hist = hist.filter(h => h.timestamp.slice(0,10) <= fTo);
+
+    const tbody = document.getElementById('history-tbody');
+    tbody.innerHTML = hist.length ? hist.map(h => {
+        const cls = h.type === 'entrada' ? 'type-in' : 'type-out';
+        const lbl = h.type === 'entrada' ? '▲ ENTRADA' : '▼ SAÍDA';
+        // FIX #12: compatibilidade com registros antigos sem campo usuario
+        const usr = h.nomeUsuario || h.usuario || '—';
+        return `<tr>
+            <td>${fmtDate(h.timestamp)}</td>
+            <td class="${cls}">${lbl}</td>
+            <td><strong>${h.sku}</strong></td>
+            <td>${h.colorName}</td>
+            <td>${h.num}</td>
+            <td><strong>${h.qty}</strong></td>
+            <td>${h.balanceAfter}</td>
+            <td style="color:#888;font-size:12px">${h.obs||'—'}</td>
+            <td style="font-size:12px;color:#555">${usr}</td>
+        </tr>`;
+    }).join('') :
+    `<tr><td colspan="9"><div class="empty-state"><span class="ico">📋</span>Nenhuma movimentação</div></td></tr>`;
+}
+
+function clearHistory() {
+    if (!confirm('Limpar TODO o histórico?')) return;
+    LS.saveHistory([]); renderHistory(); toast('Histórico limpo!');
+}
+
+/* ─────────────────────────────────────────────
+   EXPORTAR CSV — FIX #5: inclui usuário
+───────────────────────────────────────────── */
+function dlCSV(content, filename) {
+    const blob = new Blob(['﻿' + content], { type:'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    Object.assign(document.createElement('a'), { href:url, download:filename }).click();
+    URL.revokeObjectURL(url);
+    toast(`✅ ${filename} exportado!`);
+}
+
+function exportStock() {
+    const stock = LS.stock();
+    let csv = 'SKU,Cor,Numero,Saldo\n';
+    COLORS.forEach(c => NUMBERS.forEach(n => {
+        const s = mkSKU(c.sigla, n);
+        csv += `${s},${c.name},${n},${stock[s]||0}\n`;
+    }));
+    dlCSV(csv, `spt_estoque_${today()}.csv`);
+}
+
+function exportHistory() {
+    // FIX #5: CSV com campo Usuário e Nome Usuário
+    let csv = 'Data,Hora,Tipo,SKU,Cor,Numero,Quantidade,Saldo_Apos,Observacao,Usuario,NomeUsuario\n';
+    LS.history().forEach(h => {
+        const d = new Date(h.timestamp);
+        csv += `"${d.toLocaleDateString('pt-BR')}","${d.toLocaleTimeString('pt-BR')}",` +
+               `"${h.type}","${h.sku}","${h.colorName}","${h.num}","${h.qty}","${h.balanceAfter}",` +
+               `"${h.obs||''}","${h.usuario||''}","${h.nomeUsuario||''}"\n`;
+    });
+    dlCSV(csv, `spt_historico_${today()}.csv`);
+}
+
+/* ─────────────────────────────────────────────
+   GOOGLE SHEETS — FIX #10 / #11: inclui usuário
+───────────────────────────────────────────── */
+
+// FIX #11: Apps Script atualizado com campo Usuário e Nome Usuário
+const APPS_SCRIPT = `// ══════════════════════════════════════════════════════
+// SPT · Stock Sync — Google Apps Script v2 (com Usuário)
+// Cole este código no script.google.com
+// Implante como Web App → Qualquer pessoa
+// Aba Histórico terá cabeçalhos atualizados com Usuário
+// ══════════════════════════════════════════════════════
+
+function doGet(e) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const stock = {};
+  const estoqueSheet = ss.getSheetByName('Estoque');
+  if (estoqueSheet) {
+    const rows = estoqueSheet.getDataRange().getValues();
+    for (let i = 1; i < rows.length; i++) {
+      if (rows[i][0]) stock[rows[i][0]] = Number(rows[i][3]) || 0;
+    }
+  }
+  return jsonOk({ stock });
+}
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (data.action === 'addMovement') {
+      appendHistory(ss, data.entry);
+      updateStock(ss, data.entry.sku, data.entry.balanceAfter,
+                  data.entry.colorName, data.entry.num);
+    }
+    if (data.action === 'fullSync') {
+      syncAll(ss, data.stock, data.history);
+    }
+    return jsonOk({ ok: true });
+  } catch(err) {
+    return jsonErr(err.message);
+  }
+}
+
+function appendHistory(ss, h) {
+  let sheet = ss.getSheetByName('Histórico');
+  if (!sheet) {
+    sheet = ss.insertSheet('Histórico');
+    // Cabeçalhos com Usuário e Nome Usuário
+    sheet.appendRow(['Data','Hora','Tipo','SKU','Cor','Número',
+                     'Quantidade','Saldo Após','Observação','Usuário','Nome Usuário']);
+    sheet.getRange(1,1,1,11).setFontWeight('bold');
+  }
+  const d = new Date(h.timestamp);
+  sheet.appendRow([
+    Utilities.formatDate(d, Session.getScriptTimeZone(), 'dd/MM/yyyy'),
+    Utilities.formatDate(d, Session.getScriptTimeZone(), 'HH:mm:ss'),
+    h.type, h.sku, h.colorName, h.num,
+    h.qty, h.balanceAfter, h.obs || '',
+    h.usuario || '', h.nomeUsuario || ''
+  ]);
+}
+
+function updateStock(ss, skuVal, qty, colorName, num) {
+  let sheet = ss.getSheetByName('Estoque');
+  if (!sheet) {
+    sheet = ss.insertSheet('Estoque');
+    sheet.appendRow(['SKU','Cor','Número','Saldo','Última Atualização']);
+    sheet.getRange(1,1,1,5).setFontWeight('bold');
+  }
+  const rows = sheet.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0] === skuVal) {
+      sheet.getRange(i+1, 4).setValue(qty);
+      sheet.getRange(i+1, 5).setValue(new Date());
+      return;
+    }
+  }
+  sheet.appendRow([skuVal, colorName, num, qty, new Date()]);
+}
+
+function syncAll(ss, stock, history) {
+  let estoqueSheet = ss.getSheetByName('Estoque');
+  if (!estoqueSheet) estoqueSheet = ss.insertSheet('Estoque');
+  estoqueSheet.clearContents();
+  estoqueSheet.appendRow(['SKU','Cor','Número','Saldo','Atualizado Em']);
+  estoqueSheet.getRange(1,1,1,5).setFontWeight('bold');
+  Object.entries(stock).forEach(([sku, qty]) => {
+    const parts = sku.split('-');
+    estoqueSheet.appendRow([sku, parts[1]||'', parts[2]||'', qty, new Date()]);
+  });
+
+  let histSheet = ss.getSheetByName('Histórico');
+  if (!histSheet) histSheet = ss.insertSheet('Histórico');
+  histSheet.clearContents();
+  // Cabeçalhos atualizados com Usuário e Nome Usuário
+  histSheet.appendRow(['Data','Hora','Tipo','SKU','Cor','Número',
+                       'Quantidade','Saldo Após','Observação','Usuário','Nome Usuário']);
+  histSheet.getRange(1,1,1,11).setFontWeight('bold');
+  history.forEach(h => {
+    const d = new Date(h.timestamp);
+    histSheet.appendRow([
+      Utilities.formatDate(d, Session.getScriptTimeZone(), 'dd/MM/yyyy'),
+      Utilities.formatDate(d, Session.getScriptTimeZone(), 'HH:mm:ss'),
+      h.type, h.sku, h.colorName, h.num,
+      h.qty, h.balanceAfter, h.obs || '',
+      h.usuario || '', h.nomeUsuario || ''
+    ]);
+  });
+}
+
+function jsonOk(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+function jsonErr(msg) {
+  return ContentService.createTextOutput(JSON.stringify({ error: msg }))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+
+function injectAppsScriptCode() {
+    document.getElementById('apps-script-code').textContent = APPS_SCRIPT;
+}
+
+function copiarAppsScript() {
+    navigator.clipboard.writeText(APPS_SCRIPT).then(() => {
+        toast('✅ Código copiado para a área de transferência!');
+    }).catch(() => {
+        const el = document.getElementById('apps-script-code');
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+        document.execCommand('copy');
+        toast('✅ Código copiado!');
+    });
+}
+
+function salvarURL() {
+    const url = document.getElementById('sheets-url').value.trim();
+    LS.saveSheetsURL(url);
+    updateSheetsStatus();
+    toast(url ? '✅ URL salva! Sync automático ativado.' : 'URL removida (voltará para URL padrão).');
+}
+
+function updateSheetsStatus() {
+    const url   = LS.sheetsURL(); // já inclui DEFAULT se localStorage vazio
+    const dot   = document.getElementById('sync-dot');
+    const label = document.getElementById('sync-label');
+    const badge = document.getElementById('sheets-status-badge');
+    if (url) {
+        dot.className     = 'sync-dot on';
+        label.textContent = 'Sheets conectado';
+        badge.innerHTML   = '<span class="sheets-status sheets-ok">🟢 Conectado</span>';
+    } else {
+        dot.className     = 'sync-dot off';
+        label.textContent = 'Sheets desconectado';
+        badge.innerHTML   = '<span class="sheets-status sheets-off">⚪ Desconectado</span>';
+    }
+}
+
+// FIX #10: sync individual — inclui usuario e nomeUsuario
+async function autoSyncEntry(entry) {
+    const url = LS.sheetsURL();
+    if (!url) return;
+    try {
+        await fetch(url, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'addMovement', entry }),
+        });
+    } catch(_) {}
+}
+
+// FIX #10: sync completo — inclui usuario em cada entrada do histórico
+async function syncParaSheets() {
+    const url = LS.sheetsURL();
+    if (!url) { toast('Configure a URL do Google Sheets primeiro!', 'twarn'); return; }
+    toast('⏳ Enviando para Google Sheets…', 'twarn');
+    try {
+        await fetch(url, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action:  'fullSync',
+                stock:   LS.stock(),
+                history: LS.history(), // cada item já tem usuario/nomeUsuario se disponível
+                ts:      new Date().toISOString(),
+            }),
+        });
+        toast('✅ Dados enviados para o Google Sheets!');
+    } catch(e) {
+        toast('Erro ao sincronizar. Verifique a URL.', 'terr');
+    }
+}
+
+async function importarDeSheets() {
+    const url = LS.sheetsURL();
+    if (!url) { toast('Configure a URL do Google Sheets primeiro!', 'twarn'); return; }
+    toast('⏳ Importando do Google Sheets…', 'twarn');
+    try {
+        const res  = await fetch(url + '?action=getStock');
+        const data = await res.json();
+        if (data.stock) {
+            const merged = Object.assign(LS.stock(), data.stock);
+            LS.saveStock(merged);
+            renderStock();
+            toast('✅ Estoque importado do Sheets!');
+        } else {
+            toast('Resposta inesperada do Sheets.', 'terr');
+        }
+    } catch(e) {
+        toast('Erro ao importar. Verifique a URL e as permissões.', 'terr');
+    }
+}
+
+/* ─────────────────────────────────────────────
+   INIT — só chamado após login bem-sucedido
+───────────────────────────────────────────── */
+function initApp() {
+    buildGrid();
+    buildStockMatrix();
+    renderStock();
+    initScanner();
+    injectAppsScriptCode();
+
+    // FIX #2: carrega URL salva ou exibe a URL padrão no campo
+    const savedURL = localStorage.getItem('spt_sheets_url') || DEFAULT_SHEETS_URL;
+    document.getElementById('sheets-url').value = savedURL;
+    updateSheetsStatus();
+
+    // Fecha modal clicando fora
+    document.getElementById('mov-overlay').addEventListener('click', e => {
+        if (e.target === e.currentTarget) closeMov();
+    });
+
+    // Parar câmera ao sair da aba mobile
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            if (tab.dataset.tab !== 'mobile') stopMobileCamera();
+        });
+    });
+}
+
+/* ─────────────────────────────────────────────
+   BOOTSTRAP — verifica sessão ao carregar
+───────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+    checkSession();
+});
+</script>
+</body>
+</html>
